@@ -68,7 +68,8 @@
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+a[id^="sec"]{display:block;height:0;visibility:hidden}
 body{
   font-family:'Ubuntu','Avenir',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   background:var(--bg);
@@ -527,7 +528,115 @@ body{
 }
 .pipeline-tempo strong{color:var(--green-darker);font-weight:700}
 
+/* TOC LATERAL FIXO */
+.toc{
+  position:fixed;
+  left:1.25rem;top:50%;transform:translateY(-50%);
+  z-index:40;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid var(--slate-200);
+  border-radius:14px;
+  padding:1rem .75rem;
+  box-shadow:var(--shadow-lg);
+  max-width:240px;
+  transition:opacity .3s, transform .3s;
+}
+.toc-title{
+  font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--slate-500);font-weight:700;
+  padding:0 .5rem .5rem;margin-bottom:.25rem;
+  border-bottom:1px solid var(--slate-100);
+}
+.toc-list{list-style:none;display:flex;flex-direction:column;gap:.05rem}
+.toc-list a{
+  display:flex;align-items:center;gap:.65rem;
+  padding:.45rem .55rem;border-radius:7px;
+  font-size:.78rem;color:var(--slate-700);
+  text-decoration:none;line-height:1.3;
+  transition:all .15s;
+  font-weight:500;
+}
+.toc-list a:hover{background:var(--green-mist);color:var(--green-darker)}
+.toc-list a.active{
+  background:var(--green-soft);color:var(--green-darker);
+  font-weight:600;
+}
+.toc-num{
+  flex-shrink:0;width:22px;
+  font-family:'Avenir','Ubuntu',sans-serif;font-weight:500;
+  font-size:.75rem;color:var(--slate-400);
+  font-variant-numeric:tabular-nums;
+  text-align:right;
+}
+.toc-list a.active .toc-num{color:var(--green-dark);font-weight:700}
+
+/* FADE-IN ANIMATION (sections + cards) */
+.fade-in{
+  opacity:0;
+  transform:translateY(24px);
+  transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1);
+}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+.fade-in.delay-1{transition-delay:.08s}
+.fade-in.delay-2{transition-delay:.16s}
+.fade-in.delay-3{transition-delay:.24s}
+
+/* COUNT-UP — preserva layout enquanto anima */
+.count-up{display:inline-block;font-variant-numeric:tabular-nums}
+
+/* CHART FILTERS */
+.chart-filters{
+  display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.25rem;
+}
+.chart-filters button{
+  font-family:inherit;font-size:.75rem;letter-spacing:.04em;font-weight:600;
+  padding:.45rem .8rem;
+  background:white;color:var(--slate-700);
+  border:1px solid var(--slate-200);
+  border-radius:7px;cursor:pointer;
+  transition:all .15s;
+}
+.chart-filters button:hover{
+  background:var(--green-mist);color:var(--green-darker);
+  border-color:var(--green-soft);
+}
+.chart-filters button.active{
+  background:var(--green-darker);color:white;
+  border-color:var(--green-darker);
+}
+
+/* IR-AO-TOPO BOTÃO FLUTUANTE */
+.go-top{
+  position:fixed;
+  right:1.5rem;bottom:1.5rem;
+  width:48px;height:48px;border-radius:50%;
+  background:var(--ink);color:white;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border:none;
+  box-shadow:var(--shadow-lg);
+  opacity:0;pointer-events:none;
+  transform:translateY(8px);
+  transition:opacity .3s, transform .3s, background .15s;
+  z-index:50;
+}
+.go-top:hover{background:var(--green-darker)}
+.go-top.visible{opacity:1;pointer-events:auto;transform:translateY(0)}
+.go-top svg{width:20px;height:20px;stroke:currentColor;stroke-width:2.2;fill:none}
+
+/* PROGRESS BAR — barra de leitura no topo */
+.read-progress{
+  position:fixed;top:0;left:0;
+  height:3px;width:0%;
+  background:linear-gradient(90deg, var(--green) 0%, var(--green-dark) 100%);
+  z-index:60;
+  transition:width .15s;
+}
+
 /* RESPONSIVE */
+@media (max-width:1380px){
+  .toc{display:none}
+}
 @media (max-width:980px){
   .container{padding:0 1.5rem}
   .kpi-grid,.benchmark-grid{grid-template-columns:repeat(2,1fr)}
@@ -536,20 +645,56 @@ body{
   .hero-strip{grid-template-columns:repeat(2,1fr);gap:1.5rem 0}
   .hero-strip .stat{border-bottom:1px solid rgba(255,255,255,.08);padding:1rem 0}
   .hero-strip .stat:nth-child(2n){border-right:none}
+  .d2c-cenarios,.d2c-premissas,.collab-grid{grid-template-columns:1fr}
+  .export-cases{grid-template-columns:1fr}
+  .go-top{right:1rem;bottom:1rem;width:42px;height:42px}
 }
 
-/* PRINT */
+/* PRINT — esconde elementos interativos */
 @media print{
   .site-header{position:static}
+  .toc, .go-top, .read-progress, .chart-filters{display:none !important}
+  .fade-in{opacity:1 !important;transform:none !important}
   .section{page-break-inside:avoid;padding:2rem 0}
   .hero{padding:3rem 0}
   .chart-card,.kpi-card,.step-card{break-inside:avoid}
   body{background:white}
   .section:nth-child(even){background:white}
 }
+
+/* MOTION REDUCED — respeitar preferencia */
+@media (prefers-reduced-motion:reduce){
+  .fade-in{opacity:1 !important;transform:none !important;transition:none}
+  *{scroll-behavior:auto !important}
+}
 </style>
 </head>
 <body>
+
+<div class="read-progress" id="read-progress"></div>
+
+<aside class="toc" id="toc">
+  <div class="toc-title">Navegação</div>
+  <ul class="toc-list">
+    <li><a href="#sec01"><span class="toc-num">01</span><span>Leitura do momento</span></a></li>
+    <li><a href="#sec02"><span class="toc-num">02</span><span>Orgânico → estruturado</span></a></li>
+    <li><a href="#sec03"><span class="toc-num">03</span><span>Motor de receita</span></a></li>
+    <li><a href="#sec04"><span class="toc-num">04</span><span>Clientes &amp; OAK</span></a></li>
+    <li><a href="#sec05"><span class="toc-num">05</span><span>Geografia &amp; canais</span></a></li>
+    <li><a href="#sec06"><span class="toc-num">06</span><span>Margem real</span></a></li>
+    <li><a href="#sec07"><span class="toc-num">07</span><span>BP × Realidade</span></a></li>
+    <li><a href="#sec08"><span class="toc-num">08</span><span>Profissionalização</span></a></li>
+    <li><a href="#sec09"><span class="toc-num">09</span><span>Time &amp; governança</span></a></li>
+    <li><a href="#sec10"><span class="toc-num">10</span><span>Pipeline 2026</span></a></li>
+    <li><a href="#sec11"><span class="toc-num">11</span><span>Trilha 2026-2030</span></a></li>
+    <li><a href="#sec12"><span class="toc-num">12</span><span>Wellness</span></a></li>
+    <li><a href="#sec13"><span class="toc-num">13</span><span>Próximos passos</span></a></li>
+  </ul>
+</aside>
+
+<button class="go-top" id="go-top" aria-label="Ir ao topo">
+  <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
 
 <header class="site-header">
   <div class="container">
@@ -597,7 +742,8 @@ body{
 </section>
 
 <!-- 01. KPIs DE LEITURA -->
-<section class="section">
+<a id="sec01"></a>
+<section class="section fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">01</span> Leitura do momento</div>
@@ -654,8 +800,9 @@ body{
   </div>
 </section>
 
+<a id="sec02"></a>
 <!-- 02. TRAJETÓRIA — orgânico vs estruturado -->
-<section class="section">
+<section class="section fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">02</span> Crescimento orgânico → estruturado</div>
@@ -669,6 +816,13 @@ body{
           <div class="chart-card-title">Receita mensal — Jun/2024 a Mai/2026</div>
           <div class="chart-card-sub">Cinza = fase orgânica · Verde = fase estruturada (a partir de Jul/2025) · Mai/2026 parcial</div>
         </div>
+      </div>
+      <div class="chart-filters" id="trajetoria-filters">
+        <button class="active" data-period="all">Todo período</button>
+        <button data-period="12m">Últimos 12 meses</button>
+        <button data-period="2024">2024 (Jun-Dez)</button>
+        <button data-period="2025">2025</button>
+        <button data-period="2026">2026 YTD</button>
       </div>
       <div class="chart-wrapper chart-wrapper-tall"><canvas id="chart-trajetoria"></canvas></div>
     </div>
@@ -698,8 +852,9 @@ body{
   </div>
 </section>
 
+<a id="sec03"></a>
 <!-- 03. MIX -->
-<section class="section">
+<section class="section fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">03</span> O motor de receita</div>
@@ -742,8 +897,9 @@ body{
   </div>
 </section>
 
+<a id="sec04"></a>
 <!-- 04. CLIENTES -->
-<section class="section">
+<section class="section fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">04</span> Clientes e concentração</div>
@@ -800,8 +956,9 @@ body{
   </div>
 </section>
 
+<a id="sec05"></a>
 <!-- 05. GEOGRAFIA -->
-<section class="section">
+<section class="section fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">05</span> Geografia e canais</div>
@@ -842,8 +999,9 @@ body{
   </div>
 </section>
 
+<a id="sec06"></a>
 <!-- 06. MARGEM REAL -->
-<section class="section dark">
+<section class="section dark fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">06</span> A questão da margem</div>
@@ -876,8 +1034,9 @@ body{
   </div>
 </section>
 
+<a id="sec07"></a>
 <!-- 07. BP VS REALIDADE -->
-<section class="section">
+<section class="section fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">07</span> BP × realidade</div>
@@ -928,8 +1087,9 @@ body{
   </div>
 </section>
 
+<a id="sec08"></a>
 <!-- 08. AUDITORIA DE CANCELAMENTOS -->
-<section class="section">
+<section class="section fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">08</span> Sinal de profissionalização</div>
@@ -998,8 +1158,9 @@ body{
   </div>
 </section>
 
+<a id="sec09"></a>
 <!-- 09. TIME E GOVERNANÇA -->
-<section class="section dark">
+<section class="section dark fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">09</span> Time e governança</div>
@@ -1034,8 +1195,9 @@ body{
   </div>
 </section>
 
+<a id="sec10"></a>
 <!-- 10. PIPELINE 2026 -->
-<section class="section">
+<section class="section fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">10</span> Pipeline 2026</div>
@@ -1069,8 +1231,9 @@ body{
   </div>
 </section>
 
+<a id="sec11"></a>
 <!-- 11. ROADMAP -->
-<section class="section">
+<section class="section fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">11</span> Trilha 2026-2030</div>
@@ -1113,8 +1276,9 @@ body{
   </div>
 </section>
 
+<a id="sec12"></a>
 <!-- 12. WELLNESS -->
-<section class="section">
+<section class="section fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">12</span> Posicionamento wellness</div>
@@ -1160,8 +1324,9 @@ body{
   </div>
 </section>
 
+<a id="sec13"></a>
 <!-- 13. PRÓXIMOS PASSOS — escada rolante -->
-<section class="section">
+<section class="section fade-in">
   <div class="container">
     <header class="section-header">
       <div class="section-eyebrow"><span class="num">13</span> A escada rolante</div>
@@ -1228,7 +1393,7 @@ body{
   </div>
 </footer>
 
-<script id="data" type="application/json">{"meta": {"gerado_em": "08/05/2026 20:53", "periodo_inicio": "2024-06-17", "periodo_fim": "2026-05-08", "fonte": "Omie ERP — dump NF-e + DRE + BP Pedro VC 12,5%", "n_nfs": 4315, "n_clientes": 1219}, "kpis": {"receita_total_periodo": 2206981.73, "receita_2025": 1180426.72, "receita_2026_ytd": 568923.16, "receita_2026_proj": 1613588.16, "run_rate_3m": 131829.74, "run_rate_6m": 132550.94, "yoy_ytd_pct": 99.2, "meta_mensal": 1000000, "gap_meta_mensal": 868170.26, "multiplo_meta": 7.59, "oak_pct": 50.0, "oak_nome_pct": 38.8, "oak_oculto_pct": 11.2, "oak_total_receita": 1102840.34, "margem_nf_pct": 63.9, "margem_dre_pct": 4.7, "clientes_unicos": 1219, "ticket_medio_nf": 511.47, "qtd_total_unidades": 168416}, "trajetoria_mensal": [{"mes": "2024-06", "receita": 28910.24, "qtd_nfs": 119}, {"mes": "2024-07", "receita": 70967.83, "qtd_nfs": 209}, {"mes": "2024-08", "receita": 62492.36, "qtd_nfs": 222}, {"mes": "2024-09", "receita": 83145.5, "qtd_nfs": 231}, {"mes": "2024-10", "receita": 66341.7, "qtd_nfs": 192}, {"mes": "2024-11", "receita": 55750.34, "qtd_nfs": 152}, {"mes": "2024-12", "receita": 90023.88, "qtd_nfs": 120}, {"mes": "2025-01", "receita": 59184.83, "qtd_nfs": 166}, {"mes": "2025-02", "receita": 73975.95, "qtd_nfs": 177}, {"mes": "2025-03", "receita": 74283.03, "qtd_nfs": 172}, {"mes": "2025-04", "receita": 62593.58, "qtd_nfs": 133}, {"mes": "2025-05", "receita": 60876.0, "qtd_nfs": 159}, {"mes": "2025-06", "receita": 83541.29, "qtd_nfs": 168}, {"mes": "2025-07", "receita": 129551.18, "qtd_nfs": 185}, {"mes": "2025-08", "receita": 112925.97, "qtd_nfs": 225}, {"mes": "2025-09", "receita": 127420.79, "qtd_nfs": 249}, {"mes": "2025-10", "receita": 138631.19, "qtd_nfs": 224}, {"mes": "2025-11", "receita": 129536.21, "qtd_nfs": 170}, {"mes": "2025-12", "receita": 127906.7, "qtd_nfs": 179}, {"mes": "2026-01", "receita": 142373.49, "qtd_nfs": 220}, {"mes": "2026-02", "receita": 105852.97, "qtd_nfs": 192}, {"mes": "2026-03", "receita": 139521.9, "qtd_nfs": 218}, {"mes": "2026-04", "receita": 150114.36, "qtd_nfs": 180}, {"mes": "2026-05", "receita": 31060.44, "qtd_nfs": 53}], "mix_linha": [{"linha": "Granel", "receita": 1478290.49, "pct_receita": 66.9, "qtd": 60182, "margem_pct": -102885.9}, {"linha": "Cup", "receita": 401401.37, "pct_receita": 18.2, "qtd": 30240, "margem_pct": -376004.5}, {"linha": "Flow Pack", "receita": 209839.52, "pct_receita": 9.5, "qtd": 70937, "margem_pct": -100291.2}, {"linha": "Coco Branco (revenda)", "receita": 84822.96, "pct_receita": 3.8, "qtd": 4646, "margem_pct": 21.1}, {"linha": "Creme", "receita": 27209.33, "pct_receita": 1.2, "qtd": 1482, "margem_pct": -519255.7}, {"linha": "Outro Coco", "receita": 4792.5, "pct_receita": 0.2, "qtd": 200, "margem_pct": null}, {"linha": "Chocolate", "receita": 2688.13, "pct_receita": 0.1, "qtd": 170, "margem_pct": -654165.1}, {"linha": "Outro", "receita": 336.75, "pct_receita": 0.0, "qtd": 559, "margem_pct": -993.5}], "curva_abc_top15": [{"cProd": "CRK01", "xProd": "Granel - 335 g - Original", "linha": "Granel", "receita": 809926.96, "qtd": 32931, "pct": 36.7, "acum": 36.7}, {"cProd": "CRK02", "xProd": "Granel - 335 g - Cacau", "linha": "Granel", "receita": 301145.37, "qtd": 10730, "pct": 13.6, "acum": 50.3}, {"cProd": "CRK01", "xProd": "CocoRock 335 g - Original", "linha": "Granel", "receita": 287760.65, "qtd": 13813, "pct": 13.0, "acum": 63.3}, {"cProd": "CUP06", "xProd": "Cup - Oakberry", "linha": "Cup", "receita": 111378.23, "qtd": 7830, "pct": 5.0, "acum": 68.4}, {"cProd": "CUP01", "xProd": "Cup - Original", "linha": "Cup", "receita": 98737.96, "qtd": 8055, "pct": 4.5, "acum": 72.8}, {"cProd": "CUP06", "xProd": "Cup - OakBerry Original", "linha": "Cup", "receita": 79845.53, "qtd": 5735, "pct": 3.6, "acum": 76.4}, {"cProd": "COCOB1", "xProd": "COCO BRANCO MEDIO", "linha": "Coco Branco (revenda)", "receita": 78562.96, "qtd": 4330, "pct": 3.6, "acum": 80.0}, {"cProd": "FP01", "xProd": "Flowpack - 20 g - Original", "linha": "Flow Pack", "receita": 72287.73, "qtd": 28020, "pct": 3.3, "acum": 83.3}, {"cProd": "CRK02", "xProd": "CocoRock 335 g - Cacau", "linha": "Granel", "receita": 68705.41, "qtd": 2465, "pct": 3.1, "acum": 86.4}, {"cProd": "CUP02", "xProd": "Cup - Cacau", "linha": "Cup", "receita": 54919.04, "qtd": 4590, "pct": 2.5, "acum": 88.9}, {"cProd": "FP05", "xProd": "Flowpack - 20 g - Sem Acucar", "linha": "Flow Pack", "receita": 53431.86, "qtd": 15689, "pct": 2.4, "acum": 91.3}, {"cProd": "FP02", "xProd": "Flowpack - 20 g - Cacau", "linha": "Flow Pack", "receita": 51026.22, "qtd": 17427, "pct": 2.3, "acum": 93.6}, {"cProd": "CUP05", "xProd": "Cup - Sem Acucar", "linha": "Cup", "receita": 34413.56, "qtd": 2314, "pct": 1.6, "acum": 95.1}, {"cProd": "FP01", "xProd": "Flowpack CocoRock 20 g - Original", "linha": "Flow Pack", "receita": 12248.62, "qtd": 3964, "pct": 0.6, "acum": 95.7}, {"cProd": "FP03", "xProd": "Flowpack Cocorock 20 g - Sem Acucar", "linha": "Flow Pack", "receita": 11494.32, "qtd": 2920, "pct": 0.5, "acum": 96.2}], "clientes": {"oak_top15": [{"cliente": "FRUTAMIX GELADOS COMESTIVEIS", "receita": 50400.0, "nfs": 11}, {"cliente": "OAKBERRY FRANQUEADORA", "receita": 40370.3, "nfs": 20}, {"cliente": "FPS HUB IMPORTACAO E EXPORTACAO DE PRODUTOS ALIMENTICIOS LTD", "receita": 20390.4, "nfs": 1}, {"cliente": "OAKBERRY - MOOCA FABBRICA", "receita": 13031.0, "nfs": 16}, {"cliente": "OAKBERRY - BONDINHO", "receita": 11812.01, "nfs": 10}, {"cliente": "OAKBERRY ACAI RONDONOPOLIS LTDA", "receita": 11270.14, "nfs": 15}, {"cliente": "ACAI MAX COMERCIO DE ALIMENTOS LTDA", "receita": 10572.0, "nfs": 11}, {"cliente": "OAKBERRY - JARDIM IRAJA", "receita": 10494.0, "nfs": 28}, {"cliente": "OAKBERRY - LOJA IPANEMA", "receita": 10073.0, "nfs": 16}, {"cliente": "OAKBERRY - RIO2 SHOPPING", "receita": 9363.0, "nfs": 11}, {"cliente": "OAKBERRY - MACKENZIE MALL", "receita": 9349.0, "nfs": 24}, {"cliente": "LUCE OAK COMERCIO DE ACAI LTDA", "receita": 9150.01, "nfs": 12}, {"cliente": "OAKBERRY - BOULEVARD DOS JARDINS", "receita": 8337.0, "nfs": 15}, {"cliente": "OAKBERRY - CLUBE FLAMENGO", "receita": 8142.0, "nfs": 15}, {"cliente": "OAKBERRY - AVENIDA BRASIL", "receita": 7833.0, "nfs": 21}], "mid_tier_top20": [{"cliente": "EMPORIUM AVILA LTDA", "receita": 121716.9, "nfs": 49}, {"cliente": "VERDEMAR BH", "receita": 80873.76, "nfs": 23}, {"cliente": "IRMAOS SOUZA COMERCIO MERCADO CENTRAL BH", "receita": 56364.0, "nfs": 32}, {"cliente": "DROGARIA ARAUJO S A", "receita": 48129.6, "nfs": 8}, {"cliente": "IRMAOS OLIVEIRA MERCADO CENTRAL", "receita": 47022.0, "nfs": 56}, {"cliente": "MAGAZZINO DISTRIBUIDORA DE ALIMENTOS LTDA", "receita": 25872.0, "nfs": 5}, {"cliente": "NECHIO INDUSTRIA E COMERCIO DE ALIMENTOS LTDA", "receita": 23268.0, "nfs": 4}, {"cliente": "CASTANHAS GOMES", "receita": 23196.0, "nfs": 25}, {"cliente": "JUVENAL ALHOS E CEBOLAS LTDA", "receita": 21252.0, "nfs": 25}, {"cliente": "COMERCIAL ZE DO QUEIJO LTDA", "receita": 19236.0, "nfs": 17}, {"cliente": "LOURENCO DISTRIBUIDORA DE ALIMENTOS LTDA", "receita": 19009.2, "nfs": 6}, {"cliente": "COMFRIO FOOD SERVICE LTDA", "receita": 17280.0, "nfs": 4}, {"cliente": "ARM. CENTRAL SAVASSI/BH", "receita": 15752.45, "nfs": 26}, {"cliente": "MIRASOL COPACABANA HOTEL LTDA", "receita": 14285.55, "nfs": 13}, {"cliente": "WAVE IMPORTS LTDA", "receita": 13059.2, "nfs": 5}, {"cliente": "CASA FLORA LTDA", "receita": 11561.98, "nfs": 10}, {"cliente": "CAMILA RODRIGUES MOTA 09905503625", "receita": 11430.0, "nfs": 13}, {"cliente": "FRUTAMIX GELADOS COMESTIVEIS", "receita": 10800.0, "nfs": 4}, {"cliente": "IMPERIO DAS CASTANHAS", "receita": 10605.0, "nfs": 16}, {"cliente": "AYA LIVE MARKETING LTDA", "receita": 10342.5, "nfs": 5}], "mc_bh_top10": [{"cliente": "IRMAOS SOUZA COMERCIO MERCADO CENTRAL BH", "receita": 56364.0, "nfs": 32}, {"cliente": "IRMAOS OLIVEIRA MERCADO CENTRAL", "receita": 47022.0, "nfs": 56}, {"cliente": "ARM. CENTRAL SAVASSI/BH", "receita": 15752.45, "nfs": 26}, {"cliente": "ARMAZEM CENTRAL MINASCENTRO MERCADO CENTRAL/BH", "receita": 9430.5, "nfs": 16}, {"cliente": "IMPERIO DOS COCOS MERCADO CENTRAL/BH", "receita": 9057.0, "nfs": 16}, {"cliente": "EMPORIUM UNIDADE II", "receita": 8399.2, "nfs": 8}, {"cliente": "ARMAZEM CENTRAL CASTELO/BH", "receita": 4775.3, "nfs": 9}, {"cliente": "OAKBERRY - CONTORNO SAVASSI", "receita": 3550.0, "nfs": 9}, {"cliente": "OAKBERRY - SAVASSI", "receita": 2031.0, "nfs": 7}, {"cliente": "A. ARMAZEM CENTRAL MINASCENTRO MERCADO CENTRAL/BH", "receita": 1254.5, "nfs": 2}], "mc_bh_total_receita": 161149.85, "mc_bh_n_clientes": 10, "mc_bh_pct_total": 7.3, "mc_bh_pct_nao_oak": 14.6, "long_tail_count": 548, "long_tail_pct_clientes_nao_oak": 83.3, "total_clientes": 1219, "oak_n_clientes": 578}, "geografia_uf": [{"uf": "MG", "receita": 1033695.77, "pct": 46.8, "nfs": 1675, "clientes": 470}, {"uf": "SP", "receita": 656540.36, "pct": 29.7, "nfs": 1477, "clientes": 411}, {"uf": "RJ", "receita": 219972.51, "pct": 10.0, "nfs": 501, "clientes": 142}, {"uf": "SC", "receita": 78396.6, "pct": 3.6, "nfs": 209, "clientes": 55}, {"uf": "BA", "receita": 51464.89, "pct": 2.3, "nfs": 115, "clientes": 32}, {"uf": "EX", "receita": 40185.6, "pct": 1.8, "nfs": 2, "clientes": 1}, {"uf": "DF", "receita": 27300.43, "pct": 1.2, "nfs": 77, "clientes": 18}, {"uf": "PR", "receita": 19173.93, "pct": 0.9, "nfs": 47, "clientes": 22}, {"uf": "MT", "receita": 16507.91, "pct": 0.7, "nfs": 33, "clientes": 7}, {"uf": "ES", "receita": 11329.44, "pct": 0.5, "nfs": 18, "clientes": 7}, {"uf": "MS", "receita": 9963.34, "pct": 0.5, "nfs": 25, "clientes": 5}, {"uf": "RS", "receita": 7790.72, "pct": 0.4, "nfs": 28, "clientes": 12}, {"uf": "GO", "receita": 7342.07, "pct": 0.3, "nfs": 22, "clientes": 9}, {"uf": "TO", "receita": 6749.73, "pct": 0.3, "nfs": 17, "clientes": 5}, {"uf": "PE", "receita": 6561.0, "pct": 0.3, "nfs": 15, "clientes": 3}, {"uf": "SE", "receita": 5200.2, "pct": 0.2, "nfs": 19, "clientes": 5}, {"uf": "PB", "receita": 5197.0, "pct": 0.2, "nfs": 18, "clientes": 3}, {"uf": "AM", "receita": 2139.0, "pct": 0.1, "nfs": 9, "clientes": 4}, {"uf": "PA", "receita": 1040.8, "pct": 0.0, "nfs": 5, "clientes": 5}, {"uf": "RN", "receita": 232.0, "pct": 0.0, "nfs": 1, "clientes": 1}, {"uf": "CE", "receita": 198.43, "pct": 0.0, "nfs": 2, "clientes": 2}], "tipos_operacao": [{"tipo": "Venda", "receita": 2084759.53, "pct": 94.5, "nfs": 4111}, {"tipo": "Bonificacao", "receita": 45173.24, "pct": 2.0, "nfs": 195}, {"tipo": "Exportacao", "receita": 40185.6, "pct": 1.8, "nfs": 2}, {"tipo": "Remessa industrializacao", "receita": 20438.2, "pct": 0.9, "nfs": 3}, {"tipo": "Devolucao venda recebida", "receita": 16425.16, "pct": 0.7, "nfs": 4}], "bp_vs_realidade": [{"ano": 2025, "bp": 1825619.51, "realizado": 1180426.72, "gap_pct": -35.3, "eh_projecao": false}, {"ano": 2026, "bp": 3608985.11, "realizado": 1613588.16, "gap_pct": -55.3, "eh_projecao": true}, {"ano": 2027, "bp": 8451711.92, "realizado": null, "gap_pct": null, "eh_projecao": true}, {"ano": 2028, "bp": 14814830.25, "realizado": null, "gap_pct": null, "eh_projecao": true}, {"ano": 2029, "bp": 23925790.61, "realizado": null, "gap_pct": null, "eh_projecao": true}, {"ano": 2030, "bp": 27514659.2, "realizado": null, "gap_pct": null, "eh_projecao": true}], "margem_breakdown": {"receita_bruta_nf_periodo": 2206981.73, "receita_bruta_dre_2025_2026": 1933640.83, "cmv_estimado_nf": 785013.73, "margem_nf_pct": 63.9, "cmc_dre": 579067.63, "deducoes_dre": 1121960.91, "deducoes_pct_rb": 58.0, "lucro_bruto_dre": 91486.96, "margem_dre_pct": 4.7, "gap_margem_pp": 59.1}, "margem_por_linha": [{"linha": "Granel", "receita": 1478290.49, "cmv": 502829.58, "margem_total": 975460.91, "margem_pct": 66.0}, {"linha": "Cup", "receita": 401401.37, "cmv": 127960.86, "margem_total": 273440.51, "margem_pct": 68.1}, {"linha": "Flow Pack", "receita": 197950.3, "cmv": 73562.71, "margem_total": 124387.59, "margem_pct": 62.8}, {"linha": "Coco Branco (revenda)", "receita": 84822.96, "cmv": 76659.0, "margem_total": 8163.96, "margem_pct": 9.6}, {"linha": "Creme", "receita": 8491.1, "cmv": 3448.23, "margem_total": 5042.87, "margem_pct": 59.4}, {"linha": "Chocolate", "receita": 1078.0, "cmv": 317.53, "margem_total": 760.47, "margem_pct": 70.5}, {"linha": "Outro", "receita": 336.75, "cmv": 235.84, "margem_total": 100.91, "margem_pct": 30.0}], "oak_por_mes": [{"mes": "2024-06", "oak": 20111.1, "nao_oak": 8799.14, "oak_pct": 69.6}, {"mes": "2024-07", "oak": 31166.4, "nao_oak": 39801.43, "oak_pct": 43.9}, {"mes": "2024-08", "oak": 30404.96, "nao_oak": 32087.4, "oak_pct": 48.7}, {"mes": "2024-09", "oak": 35069.33, "nao_oak": 48076.17, "oak_pct": 42.2}, {"mes": "2024-10", "oak": 31191.75, "nao_oak": 35149.95, "oak_pct": 47.0}, {"mes": "2024-11", "oak": 27209.82, "nao_oak": 28540.52, "oak_pct": 48.8}, {"mes": "2024-12", "oak": 32895.0, "nao_oak": 57128.88, "oak_pct": 36.5}, {"mes": "2025-01", "oak": 38131.02, "nao_oak": 21053.81, "oak_pct": 64.4}, {"mes": "2025-02", "oak": 38698.2, "nao_oak": 35277.75, "oak_pct": 52.3}, {"mes": "2025-03", "oak": 47286.75, "nao_oak": 26996.28, "oak_pct": 63.7}, {"mes": "2025-04", "oak": 25936.0, "nao_oak": 36657.58, "oak_pct": 41.4}, {"mes": "2025-05", "oak": 32665.53, "nao_oak": 28210.47, "oak_pct": 53.7}, {"mes": "2025-06", "oak": 36917.0, "nao_oak": 46624.29, "oak_pct": 44.2}, {"mes": "2025-07", "oak": 54854.21, "nao_oak": 74696.97, "oak_pct": 42.3}, {"mes": "2025-08", "oak": 64497.79, "nao_oak": 48428.18, "oak_pct": 57.1}, {"mes": "2025-09", "oak": 62003.12, "nao_oak": 65417.67, "oak_pct": 48.7}, {"mes": "2025-10", "oak": 64354.21, "nao_oak": 74276.98, "oak_pct": 46.4}, {"mes": "2025-11", "oak": 38930.28, "nao_oak": 90605.93, "oak_pct": 30.1}, {"mes": "2025-12", "oak": 61749.0, "nao_oak": 66157.7, "oak_pct": 48.3}, {"mes": "2026-01", "oak": 104975.52, "nao_oak": 37397.97, "oak_pct": 73.7}, {"mes": "2026-02", "oak": 62482.02, "nao_oak": 43370.95, "oak_pct": 59.0}, {"mes": "2026-03", "oak": 68420.31, "nao_oak": 71101.59, "oak_pct": 49.0}, {"mes": "2026-04", "oak": 79989.02, "nao_oak": 70125.34, "oak_pct": 53.3}, {"mes": "2026-05", "oak": 12902.0, "nao_oak": 18158.44, "oak_pct": 41.5}], "auditoria_cancelamentos": {"n_total": 111, "valor_total": 171688.52, "pct_total_bruto": 7.2, "por_ano": [{"ano": 2024, "bruto": 563005.81, "canceladas_valor": 105373.96, "canceladas_nfs": 31, "liquido": 457631.85, "taxa_canc_pct": 18.72, "taxa_canc_nfs_pct": 2.43}, {"ano": 2025, "bruto": 1240233.61, "canceladas_valor": 59806.89, "canceladas_nfs": 68, "liquido": 1180426.72, "taxa_canc_pct": 4.82, "taxa_canc_nfs_pct": 2.99}, {"ano": 2026, "bruto": 575430.83, "canceladas_valor": 6507.67, "canceladas_nfs": 12, "liquido": 568923.16, "taxa_canc_pct": 1.13, "taxa_canc_nfs_pct": 1.37}], "reissue_dist": [{"status": "cnpj_outro_valor", "n_nfs": 37, "valor": 20737.56, "pct_valor": 12.1}, {"status": "reissue_aproximado", "n_nfs": 3, "valor": 7482.18, "pct_valor": 4.4}, {"status": "reissue_exato", "n_nfs": 61, "valor": 48056.58, "pct_valor": 28.0}, {"status": "sem_reissue", "n_nfs": 10, "valor": 95412.2, "pct_valor": 55.6}], "top_sem_reissue": [{"cliente": "UNIDADEBENDITA - LDA", "nNF": "4445", "data_emi": "2024-11-28", "vNF": 35700.0, "motivo": "dados incorretos"}, {"cliente": "UNIDADEBENDITA - LDA", "nNF": "4508", "data_emi": "2024-12-10", "vNF": 20092.8, "motivo": "dados incorretos"}, {"cliente": "UNIDADEBENDITA - LDA", "nNF": "4509", "data_emi": "2024-12-10", "vNF": 20092.8, "motivo": "dados incorretos"}, {"cliente": "GIL MARESIAS BAR LTDA", "nNF": "4570", "data_emi": "2024-12-20", "vNF": 15210.0, "motivo": "dados incorretos"}, {"cliente": "PEQUENINA PRODUCOES E EVENTOS LTDA", "nNF": "5888", "data_emi": "2025-08-13", "vNF": 3000.0, "motivo": "dados incorretos"}, {"cliente": "A. Cruz da Mata - Padaria do Horto Ipatinga/MG", "nNF": "3448", "data_emi": "2024-07-03", "vNF": 609.6, "motivo": "dados incorretos"}, {"cliente": "A. OAKBERRY - VILA GERTRUDES", "nNF": "3288", "data_emi": "2024-06-17", "vNF": 232.0, "motivo": "dados incorretos"}, {"cliente": "A. OAKBERRY - VILA GERTRUDES", "nNF": "3307", "data_emi": "2024-06-18", "vNF": 232.0, "motivo": "dados incorretos"}, {"cliente": "Carolina Teixeira", "nNF": "4209", "data_emi": "2024-10-17", "vNF": 171.0, "motivo": "dados incorretos"}, {"cliente": "VIVA FELIZ PRODUTOS NATURAIS LTDA", "nNF": "5352", "data_emi": "2025-05-16", "vNF": 72.0, "motivo": "dados incorretos"}], "perda_real_estimada": 95412.2}, "split_fases": {"inicio_estruturacao": "2025-07", "h1_2025_organico": 414454.68, "h2_2025_estruturado": 765972.04, "h1_2024_jun_dez": 457631.85, "h1_2026": 568923.16, "crescimento_h2h1_2025_pct": 84.8, "media_mensal_organico": 67083.58, "media_mensal_estruturado": 130383.48, "multiplicador_fase": 1.94}, "time_governanca": [{"nome": "Pedro Pinheiro Antunes", "papel": "Sócio · Comercial", "alocacao": "Full-time", "foco": "Negociação direta, relacionamento com OAK e key accounts, gestão dos pedidos.", "cor": "green", "inicial": "P"}, {"nome": "Douglas Gianordoli", "papel": "Sócio · Operações e Fábrica", "alocacao": "Full-time", "foco": "Produção, qualidade, fornecedores, logística e gestão fabril.", "cor": "green", "inicial": "D"}, {"nome": "Marcelo", "papel": "Sócio · Financeiro e BP", "alocacao": "Conselho · Estratégico", "foco": "Ex-McKinsey, formado pelo IME. Modelagem financeira, BP, cenários de captação. Disponível como conselho estratégico.", "cor": "green", "inicial": "M"}, {"nome": "Luiz Leite", "papel": "Sócio · Canal Indireto", "alocacao": "Conselho · Estratégico", "foco": "Estruturação de distribuição e canal indireto (RTM). Disponível como conselho estratégico.", "cor": "green", "inicial": "L"}, {"nome": "Bruno", "papel": "Sócio · Growth & Governança", "alocacao": "Part-time", "foco": "Ex-McKinsey, ex-Khopenhagen, ex-CEO Oakberry. Foco em ritmo, funil de vendas, governança e desenvolvimento de marca.", "cor": "cacau", "inicial": "B", "novo": true}, {"nome": "Rafhael", "papel": "Comunicação · Comunidade", "alocacao": "Em estruturação", "foco": "Fotógrafo. Gestão de comunidade, comunicação visual e marketing de comunidade.", "cor": "gengibre", "inicial": "R", "novo": true}], "pipeline_oportunidades": [{"nome": "Sam's Club", "categoria": "Key account · grande varejo", "status": "Negociação avançada", "descricao": "Entrada em uma das maiores redes de varejo associativo do Brasil. Volume de fluxo capaz de mover o mix e o patamar mensal.", "cor": "green", "tempo": "2-6 meses"}, {"nome": "Itambé", "categoria": "Indústria · parceria", "status": "Perto de acontecer", "descricao": "Parceria com gigante de laticínios. Possível ampliação industrial e ativação de canal corporativo.", "cor": "green", "tempo": "3-6 meses"}, {"nome": "Lourenço Alimentos", "categoria": "Distribuidor · varejo saudável SP", "status": "Em curso · crescer dentro", "descricao": "Distribuidora SP especializada em varejo saudável com base de mais de 4.000 clientes. Crescimento orgânico no portfólio dela é a maior alavanca de capilaridade hoje.", "cor": "gengibre", "tempo": "contínuo"}, {"nome": "Canal Online D2C", "categoria": "Digital · plataformas", "status": "Em ativação imediata", "descricao": "E-commerce próprio + Mercado Livre + Loja oficial + TikTok Shop. Embalagem atual já habilita o digital — melhorias virão incrementalmente, sem bloquear o lançamento. Alavanca a estrutura enxuta com baixo OPEX e abre coleta direta de dados de consumidor para 2027 e além.", "cor": "cacau", "tempo": "Meta realista: 6 dígitos/mês em 10-12 meses"}], "analise_d2c": {"tese": "Não existe benchmark proprietário direto desta categoria (coco premium em D2C no Brasil). A projeção abaixo é construída por proxies do mercado de alimentação saudável, considerando o awareness pré-existente da Coco Rock via OAK (clientes consomem nas franquias e buscam online) e via collabs em ativação. O cenário Realista é a tese central; Conservador e Otimista delimitam o range.", "premissas": [{"label": "Ticket médio D2C estimado", "valor": "R$ 80-120", "nota": "Mix Cup (R$ 35) + Flow Pack (display R$ 50-90) + Granel (R$ 90-120)"}, {"label": "Volume para R$ 100k/mês", "valor": "30-40 pedidos/dia", "nota": "Distribuído entre ML + loja própria + TikTok Shop, ticket médio R$ 100"}, {"label": "Tempo médio mercado", "valor": "12-18 meses", "nota": "Marcas D2C de alimentação saudável no Brasil até R$ 100k/mês de receita digital"}, {"label": "Vantagens Coco Rock", "valor": "Awareness pré-existente", "nota": "Marca já reconhecida via OAK + collabs em ativação (Yogoberry, Asa Açaí, OH!Whey) + Rafhael chegando para comunidade"}], "cenarios": [{"nome": "Conservador", "tempo": "14-18 meses", "investimento": "Mídia mínima (< R$ 5k/mês)", "descricao": "Apenas orgânico via Rafhael + comunidade existente. Escala lenta via SEO de marketplaces e tráfego de marca pré-existente. Risco baixo, ritmo pausado.", "tag": "pessimista"}, {"nome": "Realista", "tempo": "10-12 meses", "investimento": "Mídia moderada (R$ 8-15k/mês a partir do mês 3)", "descricao": "Lançamento simultâneo nas 4 plataformas + orgânico via Rafhael + mídia paga moderada para acelerar conversão. Aproveita awareness OAK e o ritmo trazido por Bruno na governança comercial. **Tese central da Coco Rock.**", "tag": "tese", "destaque": true}, {"nome": "Otimista", "tempo": "6-8 meses", "investimento": "Mídia agressiva (R$ 25-50k/mês) + time digital dedicado", "descricao": "Investimento substancial + viralização orgânica via TikTok Shop ou collabs explícitas. Possível, mas requer execução de classe e quebra de ritmo da estrutura enxuta.", "tag": "otimista"}]}, "collabs_chancela": {"tese": "Coco Rock vem virando selo de qualidade dentro de outras redes — não competimos, agregamos. O coco premium entra como ingrediente nobre e a marca chancela o produto da rede. É um modelo de margem alta, baixo CAC, alta visibilidade — leverage perfeito para a estrutura atual.", "parcerias": [{"nome": "Yogoberry", "projeto": "Creme de coco · linha de inverno", "escala": "40 lojas", "status": "Em ativação"}, {"nome": "Asa Açaí", "projeto": "Co-branding com selo Coco Rock", "escala": "Rede em expansão", "status": "Em ativação"}, {"nome": "OH!Whey", "projeto": "Sorvetes proteicos com selo Coco Rock", "escala": "Rede em formação", "status": "Em ativação"}]}, "exportacao_tese": {"principio": "Braço curto: exportação só faz sentido em duas situações — operação muito bem estruturada com parceiro forte, ou ativação de franquias OAK internacionais (fit já validado).", "casos": [{"pais": "Portugal", "parceiro": "UnidadeBendita", "status": "Encerrado", "desfecho": "Não vingou. Player parou de trabalhar na área. Não houve recompra. Tese: produto tem vocação, mas precisa de novo parceiro estruturado."}, {"pais": "Chile", "parceiro": "Goober (OAK internacional)", "status": "Em monitoramento", "desfecho": "Venda atual via OAK internacional. Precisa acompanhamento ativo para não virar venda única — risco de repetir o caso Portugal."}]}, "estrutura_atual": {"socios": 5, "socios_full_time": 2, "socios_part_time": 1, "socios_conselho": 2, "funcionarios_admin": 0, "time_vendas_proprio": 0, "novos_chegando": 1, "observacao": "Pedro e Douglas full-time absorvem operação e gestão. Bruno part-time, Marcelo e Luiz em conselho estratégico — capacidade tática limitada.", "tese_escada_rolante": "A trajetória dos sócios — de operacional para tático para estratégico — depende de margem saudável que destrave a primeira camada de estrutura: admin, mkt, vendas. Receita cresce → margem permite contratação → sócios se liberam → crescimento ganha ritmo. OPEX baixo + alta tecnologia embarcada + bons profissionais engajados."}}</script>
+<script id="data" type="application/json">{"meta": {"gerado_em": "08/05/2026 21:10", "periodo_inicio": "2024-06-17", "periodo_fim": "2026-05-08", "fonte": "Omie ERP — dump NF-e + DRE + BP Pedro VC 12,5%", "n_nfs": 4315, "n_clientes": 1219}, "kpis": {"receita_total_periodo": 2206981.73, "receita_2025": 1180426.72, "receita_2026_ytd": 568923.16, "receita_2026_proj": 1613588.16, "run_rate_3m": 131829.74, "run_rate_6m": 132550.94, "yoy_ytd_pct": 99.2, "meta_mensal": 1000000, "gap_meta_mensal": 868170.26, "multiplo_meta": 7.59, "oak_pct": 50.0, "oak_nome_pct": 38.8, "oak_oculto_pct": 11.2, "oak_total_receita": 1102840.34, "margem_nf_pct": 63.9, "margem_dre_pct": 4.7, "clientes_unicos": 1219, "ticket_medio_nf": 511.47, "qtd_total_unidades": 168416}, "trajetoria_mensal": [{"mes": "2024-06", "receita": 28910.24, "qtd_nfs": 119}, {"mes": "2024-07", "receita": 70967.83, "qtd_nfs": 209}, {"mes": "2024-08", "receita": 62492.36, "qtd_nfs": 222}, {"mes": "2024-09", "receita": 83145.5, "qtd_nfs": 231}, {"mes": "2024-10", "receita": 66341.7, "qtd_nfs": 192}, {"mes": "2024-11", "receita": 55750.34, "qtd_nfs": 152}, {"mes": "2024-12", "receita": 90023.88, "qtd_nfs": 120}, {"mes": "2025-01", "receita": 59184.83, "qtd_nfs": 166}, {"mes": "2025-02", "receita": 73975.95, "qtd_nfs": 177}, {"mes": "2025-03", "receita": 74283.03, "qtd_nfs": 172}, {"mes": "2025-04", "receita": 62593.58, "qtd_nfs": 133}, {"mes": "2025-05", "receita": 60876.0, "qtd_nfs": 159}, {"mes": "2025-06", "receita": 83541.29, "qtd_nfs": 168}, {"mes": "2025-07", "receita": 129551.18, "qtd_nfs": 185}, {"mes": "2025-08", "receita": 112925.97, "qtd_nfs": 225}, {"mes": "2025-09", "receita": 127420.79, "qtd_nfs": 249}, {"mes": "2025-10", "receita": 138631.19, "qtd_nfs": 224}, {"mes": "2025-11", "receita": 129536.21, "qtd_nfs": 170}, {"mes": "2025-12", "receita": 127906.7, "qtd_nfs": 179}, {"mes": "2026-01", "receita": 142373.49, "qtd_nfs": 220}, {"mes": "2026-02", "receita": 105852.97, "qtd_nfs": 192}, {"mes": "2026-03", "receita": 139521.9, "qtd_nfs": 218}, {"mes": "2026-04", "receita": 150114.36, "qtd_nfs": 180}, {"mes": "2026-05", "receita": 31060.44, "qtd_nfs": 53}], "mix_linha": [{"linha": "Granel", "receita": 1478290.49, "pct_receita": 66.9, "qtd": 60182, "margem_pct": -102885.9}, {"linha": "Cup", "receita": 401401.37, "pct_receita": 18.2, "qtd": 30240, "margem_pct": -376004.5}, {"linha": "Flow Pack", "receita": 209839.52, "pct_receita": 9.5, "qtd": 70937, "margem_pct": -100291.2}, {"linha": "Coco Branco (revenda)", "receita": 84822.96, "pct_receita": 3.8, "qtd": 4646, "margem_pct": 21.1}, {"linha": "Creme", "receita": 27209.33, "pct_receita": 1.2, "qtd": 1482, "margem_pct": -519255.7}, {"linha": "Outro Coco", "receita": 4792.5, "pct_receita": 0.2, "qtd": 200, "margem_pct": null}, {"linha": "Chocolate", "receita": 2688.13, "pct_receita": 0.1, "qtd": 170, "margem_pct": -654165.1}, {"linha": "Outro", "receita": 336.75, "pct_receita": 0.0, "qtd": 559, "margem_pct": -993.5}], "curva_abc_top15": [{"cProd": "CRK01", "xProd": "Granel - 335 g - Original", "linha": "Granel", "receita": 809926.96, "qtd": 32931, "pct": 36.7, "acum": 36.7}, {"cProd": "CRK02", "xProd": "Granel - 335 g - Cacau", "linha": "Granel", "receita": 301145.37, "qtd": 10730, "pct": 13.6, "acum": 50.3}, {"cProd": "CRK01", "xProd": "CocoRock 335 g - Original", "linha": "Granel", "receita": 287760.65, "qtd": 13813, "pct": 13.0, "acum": 63.3}, {"cProd": "CUP06", "xProd": "Cup - Oakberry", "linha": "Cup", "receita": 111378.23, "qtd": 7830, "pct": 5.0, "acum": 68.4}, {"cProd": "CUP01", "xProd": "Cup - Original", "linha": "Cup", "receita": 98737.96, "qtd": 8055, "pct": 4.5, "acum": 72.8}, {"cProd": "CUP06", "xProd": "Cup - OakBerry Original", "linha": "Cup", "receita": 79845.53, "qtd": 5735, "pct": 3.6, "acum": 76.4}, {"cProd": "COCOB1", "xProd": "COCO BRANCO MEDIO", "linha": "Coco Branco (revenda)", "receita": 78562.96, "qtd": 4330, "pct": 3.6, "acum": 80.0}, {"cProd": "FP01", "xProd": "Flowpack - 20 g - Original", "linha": "Flow Pack", "receita": 72287.73, "qtd": 28020, "pct": 3.3, "acum": 83.3}, {"cProd": "CRK02", "xProd": "CocoRock 335 g - Cacau", "linha": "Granel", "receita": 68705.41, "qtd": 2465, "pct": 3.1, "acum": 86.4}, {"cProd": "CUP02", "xProd": "Cup - Cacau", "linha": "Cup", "receita": 54919.04, "qtd": 4590, "pct": 2.5, "acum": 88.9}, {"cProd": "FP05", "xProd": "Flowpack - 20 g - Sem Acucar", "linha": "Flow Pack", "receita": 53431.86, "qtd": 15689, "pct": 2.4, "acum": 91.3}, {"cProd": "FP02", "xProd": "Flowpack - 20 g - Cacau", "linha": "Flow Pack", "receita": 51026.22, "qtd": 17427, "pct": 2.3, "acum": 93.6}, {"cProd": "CUP05", "xProd": "Cup - Sem Acucar", "linha": "Cup", "receita": 34413.56, "qtd": 2314, "pct": 1.6, "acum": 95.1}, {"cProd": "FP01", "xProd": "Flowpack CocoRock 20 g - Original", "linha": "Flow Pack", "receita": 12248.62, "qtd": 3964, "pct": 0.6, "acum": 95.7}, {"cProd": "FP03", "xProd": "Flowpack Cocorock 20 g - Sem Acucar", "linha": "Flow Pack", "receita": 11494.32, "qtd": 2920, "pct": 0.5, "acum": 96.2}], "clientes": {"oak_top15": [{"cliente": "FRUTAMIX GELADOS COMESTIVEIS", "receita": 50400.0, "nfs": 11}, {"cliente": "OAKBERRY FRANQUEADORA", "receita": 40370.3, "nfs": 20}, {"cliente": "FPS HUB IMPORTACAO E EXPORTACAO DE PRODUTOS ALIMENTICIOS LTD", "receita": 20390.4, "nfs": 1}, {"cliente": "OAKBERRY - MOOCA FABBRICA", "receita": 13031.0, "nfs": 16}, {"cliente": "OAKBERRY - BONDINHO", "receita": 11812.01, "nfs": 10}, {"cliente": "OAKBERRY ACAI RONDONOPOLIS LTDA", "receita": 11270.14, "nfs": 15}, {"cliente": "ACAI MAX COMERCIO DE ALIMENTOS LTDA", "receita": 10572.0, "nfs": 11}, {"cliente": "OAKBERRY - JARDIM IRAJA", "receita": 10494.0, "nfs": 28}, {"cliente": "OAKBERRY - LOJA IPANEMA", "receita": 10073.0, "nfs": 16}, {"cliente": "OAKBERRY - RIO2 SHOPPING", "receita": 9363.0, "nfs": 11}, {"cliente": "OAKBERRY - MACKENZIE MALL", "receita": 9349.0, "nfs": 24}, {"cliente": "LUCE OAK COMERCIO DE ACAI LTDA", "receita": 9150.01, "nfs": 12}, {"cliente": "OAKBERRY - BOULEVARD DOS JARDINS", "receita": 8337.0, "nfs": 15}, {"cliente": "OAKBERRY - CLUBE FLAMENGO", "receita": 8142.0, "nfs": 15}, {"cliente": "OAKBERRY - AVENIDA BRASIL", "receita": 7833.0, "nfs": 21}], "mid_tier_top20": [{"cliente": "EMPORIUM AVILA LTDA", "receita": 121716.9, "nfs": 49}, {"cliente": "VERDEMAR BH", "receita": 80873.76, "nfs": 23}, {"cliente": "IRMAOS SOUZA COMERCIO MERCADO CENTRAL BH", "receita": 56364.0, "nfs": 32}, {"cliente": "DROGARIA ARAUJO S A", "receita": 48129.6, "nfs": 8}, {"cliente": "IRMAOS OLIVEIRA MERCADO CENTRAL", "receita": 47022.0, "nfs": 56}, {"cliente": "MAGAZZINO DISTRIBUIDORA DE ALIMENTOS LTDA", "receita": 25872.0, "nfs": 5}, {"cliente": "NECHIO INDUSTRIA E COMERCIO DE ALIMENTOS LTDA", "receita": 23268.0, "nfs": 4}, {"cliente": "CASTANHAS GOMES", "receita": 23196.0, "nfs": 25}, {"cliente": "JUVENAL ALHOS E CEBOLAS LTDA", "receita": 21252.0, "nfs": 25}, {"cliente": "COMERCIAL ZE DO QUEIJO LTDA", "receita": 19236.0, "nfs": 17}, {"cliente": "LOURENCO DISTRIBUIDORA DE ALIMENTOS LTDA", "receita": 19009.2, "nfs": 6}, {"cliente": "COMFRIO FOOD SERVICE LTDA", "receita": 17280.0, "nfs": 4}, {"cliente": "ARM. CENTRAL SAVASSI/BH", "receita": 15752.45, "nfs": 26}, {"cliente": "MIRASOL COPACABANA HOTEL LTDA", "receita": 14285.55, "nfs": 13}, {"cliente": "WAVE IMPORTS LTDA", "receita": 13059.2, "nfs": 5}, {"cliente": "CASA FLORA LTDA", "receita": 11561.98, "nfs": 10}, {"cliente": "CAMILA RODRIGUES MOTA 09905503625", "receita": 11430.0, "nfs": 13}, {"cliente": "FRUTAMIX GELADOS COMESTIVEIS", "receita": 10800.0, "nfs": 4}, {"cliente": "IMPERIO DAS CASTANHAS", "receita": 10605.0, "nfs": 16}, {"cliente": "AYA LIVE MARKETING LTDA", "receita": 10342.5, "nfs": 5}], "mc_bh_top10": [{"cliente": "IRMAOS SOUZA COMERCIO MERCADO CENTRAL BH", "receita": 56364.0, "nfs": 32}, {"cliente": "IRMAOS OLIVEIRA MERCADO CENTRAL", "receita": 47022.0, "nfs": 56}, {"cliente": "ARM. CENTRAL SAVASSI/BH", "receita": 15752.45, "nfs": 26}, {"cliente": "ARMAZEM CENTRAL MINASCENTRO MERCADO CENTRAL/BH", "receita": 9430.5, "nfs": 16}, {"cliente": "IMPERIO DOS COCOS MERCADO CENTRAL/BH", "receita": 9057.0, "nfs": 16}, {"cliente": "EMPORIUM UNIDADE II", "receita": 8399.2, "nfs": 8}, {"cliente": "ARMAZEM CENTRAL CASTELO/BH", "receita": 4775.3, "nfs": 9}, {"cliente": "OAKBERRY - CONTORNO SAVASSI", "receita": 3550.0, "nfs": 9}, {"cliente": "OAKBERRY - SAVASSI", "receita": 2031.0, "nfs": 7}, {"cliente": "A. ARMAZEM CENTRAL MINASCENTRO MERCADO CENTRAL/BH", "receita": 1254.5, "nfs": 2}], "mc_bh_total_receita": 161149.85, "mc_bh_n_clientes": 10, "mc_bh_pct_total": 7.3, "mc_bh_pct_nao_oak": 14.6, "long_tail_count": 548, "long_tail_pct_clientes_nao_oak": 83.3, "total_clientes": 1219, "oak_n_clientes": 578}, "geografia_uf": [{"uf": "MG", "receita": 1033695.77, "pct": 46.8, "nfs": 1675, "clientes": 470}, {"uf": "SP", "receita": 656540.36, "pct": 29.7, "nfs": 1477, "clientes": 411}, {"uf": "RJ", "receita": 219972.51, "pct": 10.0, "nfs": 501, "clientes": 142}, {"uf": "SC", "receita": 78396.6, "pct": 3.6, "nfs": 209, "clientes": 55}, {"uf": "BA", "receita": 51464.89, "pct": 2.3, "nfs": 115, "clientes": 32}, {"uf": "EX", "receita": 40185.6, "pct": 1.8, "nfs": 2, "clientes": 1}, {"uf": "DF", "receita": 27300.43, "pct": 1.2, "nfs": 77, "clientes": 18}, {"uf": "PR", "receita": 19173.93, "pct": 0.9, "nfs": 47, "clientes": 22}, {"uf": "MT", "receita": 16507.91, "pct": 0.7, "nfs": 33, "clientes": 7}, {"uf": "ES", "receita": 11329.44, "pct": 0.5, "nfs": 18, "clientes": 7}, {"uf": "MS", "receita": 9963.34, "pct": 0.5, "nfs": 25, "clientes": 5}, {"uf": "RS", "receita": 7790.72, "pct": 0.4, "nfs": 28, "clientes": 12}, {"uf": "GO", "receita": 7342.07, "pct": 0.3, "nfs": 22, "clientes": 9}, {"uf": "TO", "receita": 6749.73, "pct": 0.3, "nfs": 17, "clientes": 5}, {"uf": "PE", "receita": 6561.0, "pct": 0.3, "nfs": 15, "clientes": 3}, {"uf": "SE", "receita": 5200.2, "pct": 0.2, "nfs": 19, "clientes": 5}, {"uf": "PB", "receita": 5197.0, "pct": 0.2, "nfs": 18, "clientes": 3}, {"uf": "AM", "receita": 2139.0, "pct": 0.1, "nfs": 9, "clientes": 4}, {"uf": "PA", "receita": 1040.8, "pct": 0.0, "nfs": 5, "clientes": 5}, {"uf": "RN", "receita": 232.0, "pct": 0.0, "nfs": 1, "clientes": 1}, {"uf": "CE", "receita": 198.43, "pct": 0.0, "nfs": 2, "clientes": 2}], "tipos_operacao": [{"tipo": "Venda", "receita": 2084759.53, "pct": 94.5, "nfs": 4111}, {"tipo": "Bonificacao", "receita": 45173.24, "pct": 2.0, "nfs": 195}, {"tipo": "Exportacao", "receita": 40185.6, "pct": 1.8, "nfs": 2}, {"tipo": "Remessa industrializacao", "receita": 20438.2, "pct": 0.9, "nfs": 3}, {"tipo": "Devolucao venda recebida", "receita": 16425.16, "pct": 0.7, "nfs": 4}], "bp_vs_realidade": [{"ano": 2025, "bp": 1825619.51, "realizado": 1180426.72, "gap_pct": -35.3, "eh_projecao": false}, {"ano": 2026, "bp": 3608985.11, "realizado": 1613588.16, "gap_pct": -55.3, "eh_projecao": true}, {"ano": 2027, "bp": 8451711.92, "realizado": null, "gap_pct": null, "eh_projecao": true}, {"ano": 2028, "bp": 14814830.25, "realizado": null, "gap_pct": null, "eh_projecao": true}, {"ano": 2029, "bp": 23925790.61, "realizado": null, "gap_pct": null, "eh_projecao": true}, {"ano": 2030, "bp": 27514659.2, "realizado": null, "gap_pct": null, "eh_projecao": true}], "margem_breakdown": {"receita_bruta_nf_periodo": 2206981.73, "receita_bruta_dre_2025_2026": 1933640.83, "cmv_estimado_nf": 785013.73, "margem_nf_pct": 63.9, "cmc_dre": 579067.63, "deducoes_dre": 1121960.91, "deducoes_pct_rb": 58.0, "lucro_bruto_dre": 91486.96, "margem_dre_pct": 4.7, "gap_margem_pp": 59.1}, "margem_por_linha": [{"linha": "Granel", "receita": 1478290.49, "cmv": 502829.58, "margem_total": 975460.91, "margem_pct": 66.0}, {"linha": "Cup", "receita": 401401.37, "cmv": 127960.86, "margem_total": 273440.51, "margem_pct": 68.1}, {"linha": "Flow Pack", "receita": 197950.3, "cmv": 73562.71, "margem_total": 124387.59, "margem_pct": 62.8}, {"linha": "Coco Branco (revenda)", "receita": 84822.96, "cmv": 76659.0, "margem_total": 8163.96, "margem_pct": 9.6}, {"linha": "Creme", "receita": 8491.1, "cmv": 3448.23, "margem_total": 5042.87, "margem_pct": 59.4}, {"linha": "Chocolate", "receita": 1078.0, "cmv": 317.53, "margem_total": 760.47, "margem_pct": 70.5}, {"linha": "Outro", "receita": 336.75, "cmv": 235.84, "margem_total": 100.91, "margem_pct": 30.0}], "oak_por_mes": [{"mes": "2024-06", "oak": 20111.1, "nao_oak": 8799.14, "oak_pct": 69.6}, {"mes": "2024-07", "oak": 31166.4, "nao_oak": 39801.43, "oak_pct": 43.9}, {"mes": "2024-08", "oak": 30404.96, "nao_oak": 32087.4, "oak_pct": 48.7}, {"mes": "2024-09", "oak": 35069.33, "nao_oak": 48076.17, "oak_pct": 42.2}, {"mes": "2024-10", "oak": 31191.75, "nao_oak": 35149.95, "oak_pct": 47.0}, {"mes": "2024-11", "oak": 27209.82, "nao_oak": 28540.52, "oak_pct": 48.8}, {"mes": "2024-12", "oak": 32895.0, "nao_oak": 57128.88, "oak_pct": 36.5}, {"mes": "2025-01", "oak": 38131.02, "nao_oak": 21053.81, "oak_pct": 64.4}, {"mes": "2025-02", "oak": 38698.2, "nao_oak": 35277.75, "oak_pct": 52.3}, {"mes": "2025-03", "oak": 47286.75, "nao_oak": 26996.28, "oak_pct": 63.7}, {"mes": "2025-04", "oak": 25936.0, "nao_oak": 36657.58, "oak_pct": 41.4}, {"mes": "2025-05", "oak": 32665.53, "nao_oak": 28210.47, "oak_pct": 53.7}, {"mes": "2025-06", "oak": 36917.0, "nao_oak": 46624.29, "oak_pct": 44.2}, {"mes": "2025-07", "oak": 54854.21, "nao_oak": 74696.97, "oak_pct": 42.3}, {"mes": "2025-08", "oak": 64497.79, "nao_oak": 48428.18, "oak_pct": 57.1}, {"mes": "2025-09", "oak": 62003.12, "nao_oak": 65417.67, "oak_pct": 48.7}, {"mes": "2025-10", "oak": 64354.21, "nao_oak": 74276.98, "oak_pct": 46.4}, {"mes": "2025-11", "oak": 38930.28, "nao_oak": 90605.93, "oak_pct": 30.1}, {"mes": "2025-12", "oak": 61749.0, "nao_oak": 66157.7, "oak_pct": 48.3}, {"mes": "2026-01", "oak": 104975.52, "nao_oak": 37397.97, "oak_pct": 73.7}, {"mes": "2026-02", "oak": 62482.02, "nao_oak": 43370.95, "oak_pct": 59.0}, {"mes": "2026-03", "oak": 68420.31, "nao_oak": 71101.59, "oak_pct": 49.0}, {"mes": "2026-04", "oak": 79989.02, "nao_oak": 70125.34, "oak_pct": 53.3}, {"mes": "2026-05", "oak": 12902.0, "nao_oak": 18158.44, "oak_pct": 41.5}], "auditoria_cancelamentos": {"n_total": 111, "valor_total": 171688.52, "pct_total_bruto": 7.2, "por_ano": [{"ano": 2024, "bruto": 563005.81, "canceladas_valor": 105373.96, "canceladas_nfs": 31, "liquido": 457631.85, "taxa_canc_pct": 18.72, "taxa_canc_nfs_pct": 2.43}, {"ano": 2025, "bruto": 1240233.61, "canceladas_valor": 59806.89, "canceladas_nfs": 68, "liquido": 1180426.72, "taxa_canc_pct": 4.82, "taxa_canc_nfs_pct": 2.99}, {"ano": 2026, "bruto": 575430.83, "canceladas_valor": 6507.67, "canceladas_nfs": 12, "liquido": 568923.16, "taxa_canc_pct": 1.13, "taxa_canc_nfs_pct": 1.37}], "reissue_dist": [{"status": "cnpj_outro_valor", "n_nfs": 37, "valor": 20737.56, "pct_valor": 12.1}, {"status": "reissue_aproximado", "n_nfs": 3, "valor": 7482.18, "pct_valor": 4.4}, {"status": "reissue_exato", "n_nfs": 61, "valor": 48056.58, "pct_valor": 28.0}, {"status": "sem_reissue", "n_nfs": 10, "valor": 95412.2, "pct_valor": 55.6}], "top_sem_reissue": [{"cliente": "UNIDADEBENDITA - LDA", "nNF": "4445", "data_emi": "2024-11-28", "vNF": 35700.0, "motivo": "dados incorretos"}, {"cliente": "UNIDADEBENDITA - LDA", "nNF": "4508", "data_emi": "2024-12-10", "vNF": 20092.8, "motivo": "dados incorretos"}, {"cliente": "UNIDADEBENDITA - LDA", "nNF": "4509", "data_emi": "2024-12-10", "vNF": 20092.8, "motivo": "dados incorretos"}, {"cliente": "GIL MARESIAS BAR LTDA", "nNF": "4570", "data_emi": "2024-12-20", "vNF": 15210.0, "motivo": "dados incorretos"}, {"cliente": "PEQUENINA PRODUCOES E EVENTOS LTDA", "nNF": "5888", "data_emi": "2025-08-13", "vNF": 3000.0, "motivo": "dados incorretos"}, {"cliente": "A. Cruz da Mata - Padaria do Horto Ipatinga/MG", "nNF": "3448", "data_emi": "2024-07-03", "vNF": 609.6, "motivo": "dados incorretos"}, {"cliente": "A. OAKBERRY - VILA GERTRUDES", "nNF": "3288", "data_emi": "2024-06-17", "vNF": 232.0, "motivo": "dados incorretos"}, {"cliente": "A. OAKBERRY - VILA GERTRUDES", "nNF": "3307", "data_emi": "2024-06-18", "vNF": 232.0, "motivo": "dados incorretos"}, {"cliente": "Carolina Teixeira", "nNF": "4209", "data_emi": "2024-10-17", "vNF": 171.0, "motivo": "dados incorretos"}, {"cliente": "VIVA FELIZ PRODUTOS NATURAIS LTDA", "nNF": "5352", "data_emi": "2025-05-16", "vNF": 72.0, "motivo": "dados incorretos"}], "perda_real_estimada": 95412.2}, "split_fases": {"inicio_estruturacao": "2025-07", "h1_2025_organico": 414454.68, "h2_2025_estruturado": 765972.04, "h1_2024_jun_dez": 457631.85, "h1_2026": 568923.16, "crescimento_h2h1_2025_pct": 84.8, "media_mensal_organico": 67083.58, "media_mensal_estruturado": 130383.48, "multiplicador_fase": 1.94}, "time_governanca": [{"nome": "Pedro Pinheiro Antunes", "papel": "Sócio · Comercial", "alocacao": "Full-time", "foco": "Negociação direta, relacionamento com OAK e key accounts, gestão dos pedidos.", "cor": "green", "inicial": "P"}, {"nome": "Douglas Gianordoli", "papel": "Sócio · Operações e Fábrica", "alocacao": "Full-time", "foco": "Produção, qualidade, fornecedores, logística e gestão fabril.", "cor": "green", "inicial": "D"}, {"nome": "Marcelo", "papel": "Sócio · Financeiro e BP", "alocacao": "Conselho · Estratégico", "foco": "Ex-McKinsey, formado pelo IME. Modelagem financeira, BP, cenários de captação. Disponível como conselho estratégico.", "cor": "green", "inicial": "M"}, {"nome": "Luiz Leite", "papel": "Sócio · Canal Indireto", "alocacao": "Conselho · Estratégico", "foco": "Estruturação de distribuição e canal indireto (RTM). Disponível como conselho estratégico.", "cor": "green", "inicial": "L"}, {"nome": "Bruno", "papel": "Sócio · Growth & Governança", "alocacao": "Part-time", "foco": "Ex-McKinsey, ex-Khopenhagen, ex-CEO Oakberry. Foco em ritmo, funil de vendas, governança e desenvolvimento de marca.", "cor": "cacau", "inicial": "B", "novo": true}, {"nome": "Rafhael", "papel": "Comunicação · Comunidade", "alocacao": "Em estruturação", "foco": "Fotógrafo. Gestão de comunidade, comunicação visual e marketing de comunidade.", "cor": "gengibre", "inicial": "R", "novo": true}], "pipeline_oportunidades": [{"nome": "Sam's Club", "categoria": "Key account · grande varejo", "status": "Negociação avançada", "descricao": "Entrada em uma das maiores redes de varejo associativo do Brasil. Volume de fluxo capaz de mover o mix e o patamar mensal.", "cor": "green", "tempo": "2-6 meses"}, {"nome": "Itambé", "categoria": "Indústria · parceria", "status": "Perto de acontecer", "descricao": "Parceria com gigante de laticínios. Possível ampliação industrial e ativação de canal corporativo.", "cor": "green", "tempo": "3-6 meses"}, {"nome": "Lourenço Alimentos", "categoria": "Distribuidor · varejo saudável SP", "status": "Em curso · crescer dentro", "descricao": "Distribuidora SP especializada em varejo saudável com base de mais de 4.000 clientes. Crescimento orgânico no portfólio dela é a maior alavanca de capilaridade hoje.", "cor": "gengibre", "tempo": "contínuo"}, {"nome": "Canal Online D2C", "categoria": "Digital · plataformas", "status": "Em ativação imediata", "descricao": "E-commerce próprio + Mercado Livre + Loja oficial + TikTok Shop. Embalagem atual já habilita o digital — melhorias virão incrementalmente, sem bloquear o lançamento. Alavanca a estrutura enxuta com baixo OPEX e abre coleta direta de dados de consumidor para 2027 e além.", "cor": "cacau", "tempo": "Meta realista: 6 dígitos/mês em 10-12 meses"}], "analise_d2c": {"tese": "Não existe benchmark proprietário direto desta categoria (coco premium em D2C no Brasil). A projeção abaixo é construída por proxies do mercado de alimentação saudável, considerando o awareness pré-existente da Coco Rock via OAK (clientes consomem nas franquias e buscam online) e via collabs em ativação. O cenário Realista é a tese central; Conservador e Otimista delimitam o range.", "premissas": [{"label": "Ticket médio D2C estimado", "valor": "R$ 80-120", "nota": "Mix Cup (R$ 35) + Flow Pack (display R$ 50-90) + Granel (R$ 90-120)"}, {"label": "Volume para R$ 100k/mês", "valor": "30-40 pedidos/dia", "nota": "Distribuído entre ML + loja própria + TikTok Shop, ticket médio R$ 100"}, {"label": "Tempo médio mercado", "valor": "12-18 meses", "nota": "Marcas D2C de alimentação saudável no Brasil até R$ 100k/mês de receita digital"}, {"label": "Vantagens Coco Rock", "valor": "Awareness pré-existente", "nota": "Marca já reconhecida via OAK + collabs em ativação (Yogoberry, Asa Açaí, OH!Whey) + Rafhael chegando para comunidade"}], "cenarios": [{"nome": "Conservador", "tempo": "14-18 meses", "investimento": "Mídia mínima (< R$ 5k/mês)", "descricao": "Apenas orgânico via Rafhael + comunidade existente. Escala lenta via SEO de marketplaces e tráfego de marca pré-existente. Risco baixo, ritmo pausado.", "tag": "pessimista"}, {"nome": "Realista", "tempo": "10-12 meses", "investimento": "Mídia moderada (R$ 8-15k/mês a partir do mês 3)", "descricao": "Lançamento simultâneo nas 4 plataformas + orgânico via Rafhael + mídia paga moderada para acelerar conversão. Aproveita awareness OAK e o ritmo trazido por Bruno na governança comercial. **Tese central da Coco Rock.**", "tag": "tese", "destaque": true}, {"nome": "Otimista", "tempo": "6-8 meses", "investimento": "Mídia agressiva (R$ 25-50k/mês) + time digital dedicado", "descricao": "Investimento substancial + viralização orgânica via TikTok Shop ou collabs explícitas. Possível, mas requer execução de classe e quebra de ritmo da estrutura enxuta.", "tag": "otimista"}]}, "collabs_chancela": {"tese": "Coco Rock vem virando selo de qualidade dentro de outras redes — não competimos, agregamos. O coco premium entra como ingrediente nobre e a marca chancela o produto da rede. É um modelo de margem alta, baixo CAC, alta visibilidade — leverage perfeito para a estrutura atual.", "parcerias": [{"nome": "Yogoberry", "projeto": "Creme de coco · linha de inverno", "escala": "40 lojas", "status": "Em ativação"}, {"nome": "Asa Açaí", "projeto": "Co-branding com selo Coco Rock", "escala": "Rede em expansão", "status": "Em ativação"}, {"nome": "OH!Whey", "projeto": "Sorvetes proteicos com selo Coco Rock", "escala": "Rede em formação", "status": "Em ativação"}]}, "exportacao_tese": {"principio": "Braço curto: exportação só faz sentido em duas situações — operação muito bem estruturada com parceiro forte, ou ativação de franquias OAK internacionais (fit já validado).", "casos": [{"pais": "Portugal", "parceiro": "UnidadeBendita", "status": "Encerrado", "desfecho": "Não vingou. Player parou de trabalhar na área. Não houve recompra. Tese: produto tem vocação, mas precisa de novo parceiro estruturado."}, {"pais": "Chile", "parceiro": "Goober (OAK internacional)", "status": "Em monitoramento", "desfecho": "Venda atual via OAK internacional. Precisa acompanhamento ativo para não virar venda única — risco de repetir o caso Portugal."}]}, "estrutura_atual": {"socios": 5, "socios_full_time": 2, "socios_part_time": 1, "socios_conselho": 2, "funcionarios_admin": 0, "time_vendas_proprio": 0, "novos_chegando": 1, "observacao": "Pedro e Douglas full-time absorvem operação e gestão. Bruno part-time, Marcelo e Luiz em conselho estratégico — capacidade tática limitada.", "tese_escada_rolante": "A trajetória dos sócios — de operacional para tático para estratégico — depende de margem saudável que destrave a primeira camada de estrutura: admin, mkt, vendas. Receita cresce → margem permite contratação → sócios se liberam → crescimento ganha ritmo. OPEX baixo + alta tecnologia embarcada + bons profissionais engajados."}}</script>
 <script>
 const D = JSON.parse(document.getElementById('data').textContent);
 const fmt = {
@@ -1723,6 +1888,136 @@ if (D.auditoria_cancelamentos){
     tbodyPerdas.appendChild(tr);
   });
 }
+
+// ===========================================================
+// INTERATIVIDADE — TOC, fade-in, count-up, filtros, ir-ao-topo
+// ===========================================================
+(function setupInteractions(){
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // --- Fade-in com IntersectionObserver ---
+  if (!reduceMotion && 'IntersectionObserver' in window){
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting){
+          e.target.classList.add('visible');
+          obs.unobserve(e.target);
+        }
+      });
+    }, {threshold: 0.08, rootMargin: '0px 0px -60px 0px'});
+    document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+  } else {
+    document.querySelectorAll('.fade-in').forEach(el => el.classList.add('visible'));
+  }
+
+  // --- Scroll spy do TOC + progress bar + go-top ---
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const sectionIds = Array.from(tocLinks).map(a => a.getAttribute('href').replace('#',''));
+  const progressBar = document.getElementById('read-progress');
+  const goTopBtn = document.getElementById('go-top');
+  function onScroll(){
+    const y = window.scrollY + 140;
+    let activeIdx = 0;
+    sectionIds.forEach((id, idx) => {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top + window.scrollY <= y) activeIdx = idx;
+    });
+    tocLinks.forEach((a, idx) => a.classList.toggle('active', idx === activeIdx));
+
+    if (progressBar){
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = total > 0 ? (window.scrollY / total) * 100 : 0;
+      progressBar.style.width = Math.min(progress, 100) + '%';
+    }
+    if (goTopBtn) goTopBtn.classList.toggle('visible', window.scrollY > 600);
+  }
+  window.addEventListener('scroll', onScroll, {passive: true});
+  onScroll();
+
+  // --- Botão ir-ao-topo ---
+  if (goTopBtn){
+    goTopBtn.addEventListener('click', () => {
+      window.scrollTo({top: 0, behavior: reduceMotion ? 'auto' : 'smooth'});
+    });
+  }
+
+  // --- Count-up nos hero KPIs ---
+  function animateCount(el, finalText, options){
+    if (reduceMotion){ el.textContent = finalText; return; }
+    options = options || {};
+    const duration = options.duration || 1400;
+    const m = String(finalText).match(/^([^\d\-]*)(-?[\d.,]+)(.*)$/);
+    if (!m){ el.textContent = finalText; return; }
+    const prefix = m[1] || '';
+    const numStr = m[2].replace(/\./g,'').replace(',', '.');
+    const numVal = parseFloat(numStr);
+    if (isNaN(numVal)){ el.textContent = finalText; return; }
+    const suffix = m[3] || '';
+    const hasComma = m[2].includes(',');
+    const decimals = hasComma ? (m[2].split(',')[1] || '').length : 0;
+    const start = performance.now();
+    function tick(now){
+      const elapsed = now - start;
+      const t = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const cur = numVal * eased;
+      const formatted = cur.toLocaleString('pt-BR', {minimumFractionDigits: decimals, maximumFractionDigits: decimals});
+      el.textContent = prefix + formatted + suffix;
+      if (t < 1) requestAnimationFrame(tick);
+      else el.textContent = finalText;
+    }
+    requestAnimationFrame(tick);
+  }
+  setTimeout(() => {
+    const heroIds = ['hero-receita-total','hero-yoy','hero-margem','hero-runrate'];
+    heroIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const final = el.textContent;
+      if (final === '—' || !final) return;
+      el.textContent = '—';
+      setTimeout(() => animateCount(el, final, {duration: 1500}), 100);
+    });
+  }, 250);
+
+  // --- Filtros temporais no chart de trajetória ---
+  setTimeout(() => {
+    const trajChart = Chart.getChart('chart-trajetoria');
+    if (trajChart && D.trajetoria_mensal){
+      const allMeses = D.trajetoria_mensal.map(m => m.mes);
+      const allDados = D.trajetoria_mensal.map(m => m.receita);
+
+      const filterBtns = document.querySelectorAll('#trajetoria-filters button');
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const period = btn.dataset.period;
+          let labels, dados;
+          if (period === 'all'){
+            labels = allMeses; dados = allDados;
+          } else if (period === '12m'){
+            labels = allMeses.slice(-12); dados = allDados.slice(-12);
+          } else {
+            const yr = period;
+            const idx = allMeses.map((m,i) => m.startsWith(yr) ? i : null).filter(i => i!==null);
+            labels = idx.map(i => allMeses[i]); dados = idx.map(i => allDados[i]);
+          }
+          trajChart.data.labels = labels;
+          trajChart.data.datasets[0].data = dados;
+          trajChart.update();
+        });
+      });
+    }
+  }, 200);
+
+  // --- Atalhos de teclado ---
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'Home'){ window.scrollTo({top:0, behavior:'smooth'}); e.preventDefault(); }
+    if (e.key === 'End'){ window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'}); e.preventDefault(); }
+  });
+})();
 
 console.log('Dashboard carregado:', D.meta);
 </script>
